@@ -6,9 +6,9 @@ import com.sun.net.httpserver.HttpServer;
 import distributed.cache.actions.inter.OnRequestCallBack;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 
 public class WebServer {
@@ -17,10 +17,10 @@ public class WebServer {
     private final int port;
     private HttpServer server;
     private final int poolSize;
-    private final OnRequestCallBack onRequestCallBack;
+    private final OnRequestCallBack[] onRequestCallBack;
 
 
-    public WebServer(int port, int poolSize, OnRequestCallBack onRequestCallBack) {
+    public WebServer(int port, int poolSize, OnRequestCallBack... onRequestCallBack) {
         this.port = port;
         this.poolSize = poolSize;
         this.onRequestCallBack = onRequestCallBack;
@@ -35,30 +35,21 @@ public class WebServer {
         }
 
         HttpContext statusContext = server.createContext(STATUS_ENDPOINT);
-        HttpContext taskContext = server.createContext(onRequestCallBack.getEndPoint());
+
+        Arrays.stream(onRequestCallBack)
+                .forEach(requestCallBack -> {
+                    HttpContext context = server.createContext(requestCallBack.getEndPoint());
+                    context.setHandler(requestCallBack::handleRequest);
+                });
 
         statusContext.setHandler(this::handleStatusCheckRequest);
-        taskContext.setHandler(this::handleTaskRequest);
-
         server.setExecutor(Executors.newFixedThreadPool(poolSize));
         server.start();
     }
 
-    private void handleTaskRequest(HttpExchange exchange) throws IOException {
-        if (!exchange.getRequestMethod().equalsIgnoreCase("post")) {
-            exchange.close();
-            return;
-        }
 
-        byte [] responseBytes = onRequestCallBack.handleRequest(readAllBytes(exchange.getRequestBody()));
-        sendResponse(responseBytes, exchange);
-    }
 
-    private byte[] readAllBytes(InputStream requestBody) throws IOException {
-        byte message[] = new byte[requestBody.available()];
-        requestBody.read(message);
-        return message;
-    }
+
 
     private void handleStatusCheckRequest(HttpExchange exchange) throws IOException {
         if (!exchange.getRequestMethod().equalsIgnoreCase("get")) {
@@ -69,7 +60,7 @@ public class WebServer {
         sendResponse(responseMessage.getBytes(), exchange);
     }
 
-    private void sendResponse(byte[] responseBytes, HttpExchange exchange) throws IOException {
+    public static void sendResponse(byte[] responseBytes, HttpExchange exchange) throws IOException {
         exchange.sendResponseHeaders(200, responseBytes.length);
         OutputStream outputStream = exchange.getResponseBody();
         outputStream.write(responseBytes);

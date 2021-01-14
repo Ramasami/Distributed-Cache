@@ -65,6 +65,7 @@ public class Worker implements Watcher {
     private void registerForWorker() throws KeeperException, InterruptedException, UnknownHostException {
         String path = zooKeeper.create(WORKER_ZNODE + "/n_", getURL(), OPEN_ACL_UNSAFE, EPHEMERAL_SEQUENTIAL);
         System.out.println("znode name " + path);
+        currentZnode = path.replace(WORKER_ZNODE + "/","");
     }
 
     private void createWorkerZnode() {
@@ -89,5 +90,9 @@ public class Worker implements Watcher {
         } catch (InterruptedException | KeeperException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getCurrentZnode() {
+        return currentZnode;
     }
 }

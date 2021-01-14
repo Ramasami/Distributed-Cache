@@ -31,7 +31,7 @@ public class ConsistentHashing implements Serializable {
         for (int i = 0; i < pointMultiplier; i++) {
             for (int j = 0; j < node.getWeight(); j++) {
                 for(int k = 0; k<3;k++) {
-                    final Long point = hashFunction((i * pointMultiplier) + j + k + node.getIp()) % searchSpace;
+                    final Long point = hashFunction((i * pointMultiplier) + j + k + node.getIp());
                     if(nodeMappings.containsKey(point))
                         continue;
                     nodePositions.get(node).add(point);
@@ -52,11 +52,11 @@ public class ConsistentHashing implements Serializable {
             while (hashtext.length() < 32) {
                 hashtext = "0" + hashtext;
             }
-            return Math.abs(hashtext.hashCode());
+            return Math.abs(hashtext.hashCode()) % searchSpace;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        return Math.abs(s.hashCode());
+        return Math.abs(s.hashCode()) % searchSpace;
     }
 
     void removeNode(Node node) {
@@ -70,6 +70,8 @@ public class ConsistentHashing implements Serializable {
     }
 
     public Node getAssignedNode(String request) {
+        if(nodeMappings.size()==0)
+                return null;
         final Long key = hashFunction(request);
         final Map.Entry<Long, Node> entry = nodeMappings.higherEntry(key);
         if (entry == null) {

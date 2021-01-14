@@ -58,5 +58,8 @@ public class WorkerHash implements Watcher {
         }
     }
 
+    public Node getAssignedNode(String request) {
+        return hashing.getAssignedNode(request);
+    }
 
 }

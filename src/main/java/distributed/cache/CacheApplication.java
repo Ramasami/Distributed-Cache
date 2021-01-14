@@ -31,7 +31,7 @@ public class CacheApplication implements Watcher {
         CacheApplication cache = new CacheApplication();
         cache.connectToZooKeeper();
         Worker worker = new Worker(zooKeeper,port);
-        LeaderElectionCallback leaderElectionCallback = new LeaderElectionCallbackImpl(shutWorker, worker, zooKeeper);
+        LeaderElectionCallback leaderElectionCallback = new LeaderElectionCallbackImpl(shutWorker, worker, zooKeeper, port);
         LeaderElection leaderElection = new LeaderElection(zooKeeper,leaderElectionCallback);
         cache.run();
 
