@@ -1,6 +1,7 @@
 package distributed.cache.network.management;
 
 import distributed.cache.actions.inter.LeaderElectionCallback;
+import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
@@ -14,7 +15,7 @@ public class LeaderElection implements Watcher {
     private String currentZnode = null;
     private final LeaderElectionCallback leaderElectionCallback;
 
-    public LeaderElection(ZooKeeper zooKeeper, LeaderElectionCallback leaderElectionCallback) throws KeeperException, InterruptedException {
+    public LeaderElection(ZooKeeper zooKeeper, LeaderElectionCallback leaderElectionCallback) throws KeeperException, InterruptedException, IOReactorException {
         this.zooKeeper = zooKeeper;
         this.leaderElectionCallback = leaderElectionCallback;
         createElectionZnode();
@@ -22,7 +23,7 @@ public class LeaderElection implements Watcher {
         reelect();
     }
 
-    private void reelect() throws KeeperException, InterruptedException {
+    private void reelect() throws KeeperException, InterruptedException, IOReactorException {
         Stat stat = null;
         String prev = "";
         while (stat == null) {
@@ -62,7 +63,7 @@ public class LeaderElection implements Watcher {
     public void process(WatchedEvent watchedEvent) {
         try {
             reelect();
-        } catch (KeeperException | InterruptedException e) {
+        } catch (KeeperException | InterruptedException | IOReactorException e) {
             e.printStackTrace();
         }
     }
